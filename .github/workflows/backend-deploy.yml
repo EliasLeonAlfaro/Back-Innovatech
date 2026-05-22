@@ -1,4 +1,4 @@
-name: Backend Microservices CI/CD (Private Subnet Deploy)
+name: Backend Ventas y Despacho
 
 on:
   push:
