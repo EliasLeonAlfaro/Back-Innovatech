@@ -26,8 +26,9 @@ jobs:
       - name: Construir y Subir Imagen Docker (Despachos)
         uses: docker/build-push-action@v5
         with:
-          # ➡️ Cambiamos el contexto a la raíz para que Docker vea todo el proyectoaaaa
-          context: .
+          # ➡️ CORREGIDO: El contexto es donde está el pom.xml y src
+          context: ./back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
+          # ➡️ CORREGIDO: Indicamos dónde está el Dockerfile un nivel más arriba
           file: ./back-Despachos_SpringBoot/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/back_despachos:latest
@@ -85,8 +86,9 @@ jobs:
       - name: Construir y Subir Imagen Docker (Ventas)
         uses: docker/build-push-action@v5
         with:
-          # ➡️ Cambiamos el contexto a la raíz para que Docker vea todo el proyecto
-          context: .
+          # ➡️ CORREGIDO: El contexto es donde está el pom.xml y src de Ventas
+          context: ./back-Ventas_SpringBoot/Springboot-API-REST
+          # ➡️ CORREGIDO: Indicamos dónde está el Dockerfile un nivel más arriba
           file: ./back-Ventas_SpringBoot/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/back_ventas:latest
