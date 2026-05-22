@@ -1,4 +1,4 @@
-name: Backend Microservices CI/CD (No-Local Compose)
+name: Backend Microservices CI/CD (Private Subnet Deploy)
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     paths:
       - 'back-Despachos_SpringBoot/**'
       - 'back-Ventas_SpringBoot/**'
-      - 'docker-compose.yml' # También se activa si editas el compose
+      - 'docker-compose.yml'
 
 jobs:
   # -------------------------------------------------------------
@@ -35,22 +35,29 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/back_despachos:latest
 
-      # ➡️ PASO CLAVE: Copiar el docker-compose.yml desde GitHub hacia la EC2 en caliente
-      - name: Copiar docker-compose.yml a la EC2
+      # ➡️ COPIAR COMPOSE PASANDO POR EL FRONTEND (PUENTE)
+      - name: Copiar docker-compose.yml a la EC2 Privada
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.AWS_EC2_BACKEND_IP }}
+          host: ${{ secrets.AWS_EC2_BACKEND_PRIVATE_IP }} # IP Privada destino
           username: ec2-user
           key: ${{ secrets.AWS_PRIVATE_KEY }}
+          proxy_host: ${{ secrets.AWS_EC2_FRONTEND_IP }} # IP Pública puente
+          proxy_username: ec2-user
+          proxy_key: ${{ secrets.AWS_PRIVATE_KEY }}
           source: "docker-compose.yml"
           target: "/home/ec2-user/app/"
 
-      - name: Despliegue en AWS EC2 vía SSH
+      # ➡️ EJECUTAR COMANDOS PASANDO POR EL FRONTEND (PUENTE)
+      - name: Despliegue en AWS EC2 Privada vía SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.AWS_EC2_BACKEND_IP }}
+          host: ${{ secrets.AWS_EC2_BACKEND_PRIVATE_IP }} # IP Privada destino
           username: ec2-user
           key: ${{ secrets.AWS_PRIVATE_KEY }}
+          proxy_host: ${{ secrets.AWS_EC2_FRONTEND_IP }} # IP Pública puente
+          proxy_username: ec2-user
+          proxy_key: ${{ secrets.AWS_PRIVATE_KEY }}
           envs: DOCKERHUB_USERNAME,DOCKERHUB_TOKEN,DB_ENDPOINT,DB_NAME,DB_USERNAME,DB_PASSWORD
           script: |
             echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
@@ -91,22 +98,29 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/back_ventas:latest
 
-      # ➡️ PASO CLAVE: Copiar el docker-compose.yml desde GitHub hacia la EC2 en caliente
-      - name: Copiar docker-compose.yml a la EC2
+      # ➡️ COPIAR COMPOSE PASANDO POR EL FRONTEND (PUENTE)
+      - name: Copiar docker-compose.yml a la EC2 Privada
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.AWS_EC2_BACKEND_IP }}
+          host: ${{ secrets.AWS_EC2_BACKEND_PRIVATE_IP }}
           username: ec2-user
           key: ${{ secrets.AWS_PRIVATE_KEY }}
+          proxy_host: ${{ secrets.AWS_EC2_FRONTEND_IP }}
+          proxy_username: ec2-user
+          proxy_key: ${{ secrets.AWS_PRIVATE_KEY }}
           source: "docker-compose.yml"
           target: "/home/ec2-user/app/"
 
-      - name: Despliegue en AWS EC2 vía SSH
+      # ➡️ EJECUTAR COMANDOS PASANDO POR EL FRONTEND (PUENTE)
+      - name: Despliegue en AWS EC2 Privada vía SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.AWS_EC2_BACKEND_IP }}
+          host: ${{ secrets.AWS_EC2_BACKEND_PRIVATE_IP }}
           username: ec2-user
           key: ${{ secrets.AWS_PRIVATE_KEY }}
+          proxy_host: ${{ secrets.AWS_EC2_FRONTEND_IP }}
+          proxy_username: ec2-user
+          proxy_key: ${{ secrets.AWS_PRIVATE_KEY }}
           envs: DOCKERHUB_USERNAME,DOCKERHUB_TOKEN,DB_ENDPOINT,DB_NAME,DB_USERNAME,DB_PASSWORD
           script: |
             echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
