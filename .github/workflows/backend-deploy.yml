@@ -26,7 +26,7 @@ jobs:
       - name: Construir y Subir Imagen Docker (Despachos)
         uses: docker/build-push-action@v5
         with:
-          # ➡️ Cambiamos el contexto a la raíz para que Docker vea todo el proyecto
+          # ➡️ Cambiamos el contexto a la raíz para que Docker vea todo el proyectoaaaa
           context: .
           file: ./back-Despachos_SpringBoot/Dockerfile
           push: true
