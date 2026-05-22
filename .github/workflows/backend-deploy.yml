@@ -111,7 +111,7 @@ jobs:
           source: "docker-compose.yml"
           target: "/home/ec2-user/app/"
 
-      # ➡️ EJECUTAR COMANDOS PASANDO POR EL FRONTEND (PUENTE)
+      # ➡️ EJECUTAR COMANDOS PASANDO POR EL FRONTEND (PUENTE)aa
       - name: Despliegue en AWS EC2 Privada vía SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
