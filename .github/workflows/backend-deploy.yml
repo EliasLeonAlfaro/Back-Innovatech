@@ -64,7 +64,7 @@ jobs:
             echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
             cd /home/ec2-user/app
             docker pull "$DOCKERHUB_USERNAME/back_despachos:latest"
-            docker compose up -d --no-deps --build back_despachos
+            docker-compose up -d --no-deps --build back_despachos
 
   # -------------------------------------------------------------
   # JOB 2: MICROSERVICIO VENTAS
@@ -124,4 +124,4 @@ jobs:
             echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
             cd /home/ec2-user/app
             docker pull "$DOCKERHUB_USERNAME/back_ventas:latest"
-            docker compose up -d --no-deps --build back_ventas
+            docker-compose up -d --no-deps --build back_ventas
