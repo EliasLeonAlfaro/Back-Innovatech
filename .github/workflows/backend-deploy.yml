@@ -98,7 +98,7 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/back_ventas:latest
 
-      # ➡️ COPIAR COMPOSE PASANDO POR EL FRONTEND (PUENTE)
+      # ➡️ COPIAR COMPOSE PASANDO POR EL FRONTEND (PUENTE)aaa
       - name: Copiar docker-compose.yml a la EC2 Privada
         uses: appleboy/scp-action@v0.1.7
         with:
