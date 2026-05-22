@@ -1,10 +1,10 @@
 FROM maven:3.9.6-eclipse-temurin-17-alpine AS build
 WORKDIR /app
 
-# ➡️ CORREGIDO: Le decimos a Docker que busque dentro de la subcarpeta de Ventas
-COPY ./Springboot-API-REST/pom.xml .
+# Buscamos el código bajando un nivel hacia la subcarpeta interna de Ventas
+COPY ./back-Ventas_SpringBoot/Springboot-API-REST/pom.xml .
 RUN mvn dependency:go-offline -B
-COPY ./Springboot-API-REST/src ./src
+COPY ./back-Ventas_SpringBoot/Springboot-API-REST/src ./src
 RUN mvn package -DskipTests
 
 FROM eclipse-temurin:17-jre-alpine
