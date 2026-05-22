@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  back_despachos:
+    image: ${DOCKERHUB_USERNAME}/back_despachos:latest
+    container_name: back_despachos_container
+    restart: always
+    ports:
+      - "8085:8085"
+    environment:
+      - SERVER_PORT=8085
+      - DB_ENDPOINT=${DB_ENDPOINT}
+      - DB_PORT=3306
+      - DB_NAME=${DB_NAME}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+
+  back_ventas:
+    image: ${DOCKERHUB_USERNAME}/back_ventas:latest
+    container_name: back_ventas_container
+    restart: always
+    ports:
+      - "8086:8086"
+    environment:
+      - SERVER_PORT=8086
+      - DB_ENDPOINT=${DB_ENDPOINT}
+      - DB_PORT=3306
+      - DB_NAME=${DB_NAME}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
