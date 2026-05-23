@@ -1,4 +1,4 @@
-name: Backend Microservices CI/CD (Private Subnet Deploy)
+name: Backend Microservices CI/CD (Private Subnet Deploy - Docker Run)
 
 on:
   push:
@@ -31,18 +31,6 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/back_despachos:latest
 
-      - name: Copiar docker-compose.yml a la EC2 Privada
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.AWS_EC2_BACKEND_PRIVATE_IP }}
-          username: ec2-user
-          key: ${{ secrets.AWS_PRIVATE_KEY }}
-          proxy_host: ${{ secrets.AWS_EC2_FRONTEND_IP }}
-          proxy_username: ec2-user
-          proxy_key: ${{ secrets.AWS_PRIVATE_KEY }}
-          source: "docker-compose.yml"
-          target: "/home/ec2-user/app/"
-
       - name: Despliegue en AWS EC2 Privada vía SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -54,7 +42,6 @@ jobs:
           proxy_key: ${{ secrets.AWS_PRIVATE_KEY }}
           envs: DOCKERHUB_USERNAME,DOCKERHUB_TOKEN,DB_ENDPOINT,DB_NAME,DB_USERNAME,DB_PASSWORD
           script: |
-            # Mapeo explícito y seguro con comillas dobles para evitar caídas de Bash
             export DOCKERHUB_USERNAME="${{ secrets.DOCKERHUB_USERNAME }}"
             export DOCKERHUB_TOKEN="${{ secrets.DOCKERHUB_TOKEN }}"
             export DB_ENDPOINT="${{ secrets.DB_ENDPOINT }}"
@@ -62,16 +49,28 @@ jobs:
             export DB_USERNAME="${{ secrets.DB_USERNAME }}"
             export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
 
-            # Login en la máquina remota
+            # Login en Docker localmente usando las credenciales mapeadas
             echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
             
-            cd /home/ec2-user/app
+            # ➡️ Detener y eliminar el contenedor anterior de Despachos si existe
+            docker stop back_despachos_container || true
+            docker rm back_despachos_container || true
             
-            # Descarga de la nueva versión de la imagen
+            # Descargar la nueva imagen
             docker pull "$DOCKERHUB_USERNAME/back_despachos:latest"
             
-            # Orquestación con el ejecutable nativo de Amazon Linux (docker-compose)
-            docker-compose up -d --no-deps --build back_despachos
+            # ➡️ Despliegue usando "docker run" nativo con sus variables de entorno
+            docker run -d \
+              --name back_despachos_container \
+              -p 8085:8085 \
+              --restart always \
+              -e SERVER_PORT=8085 \
+              -e DB_ENDPOINT="$DB_ENDPOINT" \
+              -e DB_PORT=3306 \
+              -e DB_NAME="$DB_NAME" \
+              -e DB_USERNAME="$DB_USERNAME" \
+              -e DB_PASSWORD="$DB_PASSWORD" \
+              "$DOCKERHUB_USERNAME/back_despachos:latest"
 
   # -------------------------------------------------------------
   # JOB 2: MICROSERVICIO VENTAS
@@ -98,18 +97,6 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/back_ventas:latest
 
-      - name: Copiar docker-compose.yml a la EC2 Privada
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.AWS_EC2_BACKEND_PRIVATE_IP }}
-          username: ec2-user
-          key: ${{ secrets.AWS_PRIVATE_KEY }}
-          proxy_host: ${{ secrets.AWS_EC2_FRONTEND_IP }}
-          proxy_username: ec2-user
-          proxy_key: ${{ secrets.AWS_PRIVATE_KEY }}
-          source: "docker-compose.yml"
-          target: "/home/ec2-user/app/"
-
       - name: Despliegue en AWS EC2 Privada vía SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -121,7 +108,6 @@ jobs:
           proxy_key: ${{ secrets.AWS_PRIVATE_KEY }}
           envs: DOCKERHUB_USERNAME,DOCKERHUB_TOKEN,DB_ENDPOINT,DB_NAME,DB_USERNAME,DB_PASSWORD
           script: |
-            # Mapeo explícito y seguro con comillas dobles para evitar caídas de Bash
             export DOCKERHUB_USERNAME="${{ secrets.DOCKERHUB_USERNAME }}"
             export DOCKERHUB_TOKEN="${{ secrets.DOCKERHUB_TOKEN }}"
             export DB_ENDPOINT="${{ secrets.DB_ENDPOINT }}"
@@ -129,13 +115,25 @@ jobs:
             export DB_USERNAME="${{ secrets.DB_USERNAME }}"
             export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
 
-            # Login en la máquina remota
+            # Login en Docker localmente
             echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
             
-            cd /home/ec2-user/app
+            # ➡️ Detener y eliminar el contenedor anterior de Ventas si existe
+            docker stop back_ventas_container || true
+            docker rm back_ventas_container || true
             
-            # Descarga de la nueva versión de la imagen
+            # Descargar la nueva imagen
             docker pull "$DOCKERHUB_USERNAME/back_ventas:latest"
             
-            # Orquestación con el ejecutable nativo de Amazon Linux (docker-compose)
-            docker-compose up -d --no-deps --build back_ventas
+            # ➡️ Despliegue usando "docker run" nativo con sus variables de entorno
+            docker run -d \
+              --name back_ventas_container \
+              -p 8086:8086 \
+              --restart always \
+              -e SERVER_PORT=8086 \
+              -e DB_ENDPOINT="$DB_ENDPOINT" \
+              -e DB_PORT=3306 \
+              -e DB_NAME="$DB_NAME" \
+              -e DB_USERNAME="$DB_USERNAME" \
+              -e DB_PASSWORD="$DB_PASSWORD" \
+              "$DOCKERHUB_USERNAME/back_ventas:latest"
