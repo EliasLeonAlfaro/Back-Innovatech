@@ -49,17 +49,17 @@ jobs:
             export DB_USERNAME="${{ secrets.DB_USERNAME }}"
             export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
 
-            # Login en Docker localmente usando las credenciales mapeadas
             echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
             
-            # ➡️ Detener y eliminar el contenedor anterior de Despachos si existe
+            # ➡️ NUEVO: Fuerza la detención de CUALQUIER contenedor que tenga el puerto 8085 ocupado
+            docker rm -f $(docker ps -q --filter "publish=8085") 2>/dev/null || true
+            
+            # Limpieza estándar por nombre
             docker stop back_despachos_container || true
             docker rm back_despachos_container || true
             
-            # Descargar la nueva imagen
             docker pull "$DOCKERHUB_USERNAME/back_despachos:latest"
             
-            # ➡️ Despliegue usando "docker run" nativo con sus variables de entorno
             docker run -d \
               --name back_despachos_container \
               -p 8085:8085 \
@@ -115,17 +115,17 @@ jobs:
             export DB_USERNAME="${{ secrets.DB_USERNAME }}"
             export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
 
-            # Login en Docker localmente
             echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
             
-            # ➡️ Detener y eliminar el contenedor anterior de Ventas si existe
+            # ➡️ NUEVO: Fuerza la detención de CUALQUIER contenedor que tenga el puerto 8086 ocupado
+            docker rm -f $(docker ps -q --filter "publish=8086") 2>/dev/null || true
+            
+            # Limpieza estándar por nombre
             docker stop back_ventas_container || true
             docker rm back_ventas_container || true
             
-            # Descargar la nueva imagen
             docker pull "$DOCKERHUB_USERNAME/back_ventas:latest"
             
-            # ➡️ Despliegue usando "docker run" nativo con sus variables de entorno
             docker run -d \
               --name back_ventas_container \
               -p 8086:8086 \
