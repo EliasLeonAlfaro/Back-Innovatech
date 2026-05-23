@@ -51,25 +51,21 @@ jobs:
 
             echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
             
-            # ➡️ NUEVO: Fuerza la detención de CUALQUIER contenedor que tenga el puerto 8085 ocupado
             docker rm -f $(docker ps -q --filter "publish=8085") 2>/dev/null || true
-            
-            # Limpieza estándar por nombre
             docker stop back_despachos_container || true
             docker rm back_despachos_container || true
             
             docker pull "$DOCKERHUB_USERNAME/back_despachos:latest"
             
+            # ➡️ CORREGIDO: Se inyectan las propiedades de MySQL directo en el string de conexión JDBC de Spring
             docker run -d \
               --name back_despachos_container \
               -p 8085:8085 \
               --restart always \
               -e SERVER_PORT=8085 \
-              -e DB_ENDPOINT="$DB_ENDPOINT" \
-              -e DB_PORT=3306 \
-              -e DB_NAME="$DB_NAME" \
-              -e DB_USERNAME="$DB_USERNAME" \
-              -e DB_PASSWORD="$DB_PASSWORD" \
+              -e SPRING_DATASOURCE_URL="jdbc:mysql://$DB_ENDPOINT:3306/$DB_NAME?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC" \
+              -e SPRING_DATASOURCE_USERNAME="$DB_USERNAME" \
+              -e SPRING_DATASOURCE_PASSWORD="$DB_PASSWORD" \
               "$DOCKERHUB_USERNAME/back_despachos:latest"
 
   # -------------------------------------------------------------
@@ -117,23 +113,19 @@ jobs:
 
             echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
             
-            # ➡️ NUEVO: Fuerza la detención de CUALQUIER contenedor que tenga el puerto 8086 ocupado
             docker rm -f $(docker ps -q --filter "publish=8086") 2>/dev/null || true
-            
-            # Limpieza estándar por nombre
             docker stop back_ventas_container || true
             docker rm back_ventas_container || true
             
             docker pull "$DOCKERHUB_USERNAME/back_ventas:latest"
             
+            # ➡️ CORREGIDO: Se inyectan las propiedades de MySQL directo en el string de conexión JDBC de Spring
             docker run -d \
               --name back_ventas_container \
               -p 8086:8086 \
               --restart always \
               -e SERVER_PORT=8086 \
-              -e DB_ENDPOINT="$DB_ENDPOINT" \
-              -e DB_PORT=3306 \
-              -e DB_NAME="$DB_NAME" \
-              -e DB_USERNAME="$DB_USERNAME" \
-              -e DB_PASSWORD="$DB_PASSWORD" \
+              -e SPRING_DATASOURCE_URL="jdbc:mysql://$DB_ENDPOINT:3306/$DB_NAME?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC" \
+              -e SPRING_DATASOURCE_USERNAME="$DB_USERNAME" \
+              -e SPRING_DATASOURCE_PASSWORD="$DB_PASSWORD" \
               "$DOCKERHUB_USERNAME/back_ventas:latest"
