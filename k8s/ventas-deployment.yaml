@@ -20,7 +20,7 @@ spec:
             - containerPort: 8086
           env:
             - name: SERVER_PORT
-              value: "8085"
+              value: "8086"
             - name: SPRING_PROFILES_ACTIVE
               value: "prod"
             - name: SPRING_DATASOURCE_URL
