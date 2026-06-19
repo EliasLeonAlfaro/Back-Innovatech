@@ -17,7 +17,7 @@ spec:
         - name: ventas
           image: 308769698189.dkr.ecr.us-east-1.amazonaws.com/backend-innovatech:ventas
           ports:
-            - containerPort: 8085
+            - containerPort: 8086
           env:
             - name: SERVER_PORT
               value: "8085"
@@ -56,6 +56,6 @@ spec:
     app: ventas
   ports:
     - protocol: TCP
-      port: 8085
-      targetPort: 8085
+      port: 8086
+      targetPort: 8086
   type: ClusterIP
