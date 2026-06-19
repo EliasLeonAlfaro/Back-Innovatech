@@ -1,4 +1,3 @@
-
 name: Backend Microservices CI/CD (ECR + EKS)
 
 on:
@@ -17,8 +16,9 @@ jobs:
   build-and-deploy:
     name: Build, Push & Deploy Backend
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout del código
+      - name: Checkout del codigo
         uses: actions/checkout@v4
 
       - name: Configurar credenciales AWS
@@ -41,8 +41,7 @@ jobs:
           context: .
           file: ./back-Despachos_SpringBoot/Dockerfile
           push: true
-          tags: |
-            308769698189.dkr.ecr.us-east-1.amazonaws.com/backend-innovatech:despachos
+          tags: 308769698189.dkr.ecr.us-east-1.amazonaws.com/backend-innovatech:despachos
 
       - name: Build y Push imagen Ventas
         uses: docker/build-push-action@v5
@@ -50,21 +49,20 @@ jobs:
           context: .
           file: ./back-Ventas_SpringBoot/Dockerfile
           push: true
-          tags: |
-            308769698189.dkr.ecr.us-east-1.amazonaws.com/backend-innovatech:ventas
+          tags: 308769698189.dkr.ecr.us-east-1.amazonaws.com/backend-innovatech:ventas
 
       - name: Instalar kubectl
         uses: azure/setup-kubectl@v4
 
-      - name: Configurar conexión con EKS
+      - name: Configurar conexion con EKS
         run: |
           aws eks update-kubeconfig \
-            --region ${{ env.AWS_REGION }} \
-            --name ${{ env.EKS_CLUSTER_NAME }}
+            --region us-east-1 \
+            --name innovatech
 
       - name: Crear namespace si no existe
         run: |
-          kubectl create namespace ${{ env.K8S_NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create namespace innovatech --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Crear o actualizar Secret MySQL en Kubernetes
         run: |
@@ -72,7 +70,7 @@ jobs:
             --from-literal=SPRING_DATASOURCE_URL="jdbc:mysql://${{ secrets.DB_ENDPOINT }}:3306/${{ secrets.DB_NAME }}?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC" \
             --from-literal=SPRING_DATASOURCE_USERNAME="${{ secrets.DB_USERNAME }}" \
             --from-literal=SPRING_DATASOURCE_PASSWORD="${{ secrets.DB_PASSWORD }}" \
-            -n ${{ env.K8S_NAMESPACE }} \
+            -n innovatech \
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Aplicar manifiestos Kubernetes
@@ -83,23 +81,19 @@ jobs:
 
       - name: Actualizar imagen Ventas
         run: |
-          kubectl set image deployment/ventas \
-            ventas=${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}[.amazonaws.com/$](https://.amazonaws.com/$){{ env.ECR_REPOSITORY }}:ventas \
-            -n ${{ env.K8S_NAMESPACE }}
+          kubectl set image deployment/ventas ventas=308769698189.dkr.ecr.us-east-1.amazonaws.com/backend-innovatech:ventas -n innovatech
 
       - name: Actualizar imagen Despachos
         run: |
-          kubectl set image deployment/despachos \
-            despachos=${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}[.amazonaws.com/$](https://.amazonaws.com/$){{ env.ECR_REPOSITORY }}:despachos \
-            -n ${{ env.K8S_NAMESPACE }}
+          kubectl set image deployment/despachos despachos=308769698189.dkr.ecr.us-east-1.amazonaws.com/backend-innovatech:despachos -n innovatech
 
       - name: Reiniciar deployments
         run: |
-          kubectl rollout restart deployment ventas -n ${{ env.K8S_NAMESPACE }}
-          kubectl rollout restart deployment despachos -n ${{ env.K8S_NAMESPACE }}
+          kubectl rollout restart deployment ventas -n innovatech
+          kubectl rollout restart deployment despachos -n innovatech
 
       - name: Verificar rollout
         run: |
-          kubectl rollout status deployment/ventas -n ${{ env.K8S_NAMESPACE }}
-          kubectl rollout status deployment/despachos -n ${{ env.K8S_NAMESPACE }}
-          kubectl get pods -n ${{ env.K8S_NAMESPACE }}
+          kubectl rollout status deployment/ventas -n innovatech
+          kubectl rollout status deployment/despachos -n innovatech
+          kubectl get pods -n innovatech
