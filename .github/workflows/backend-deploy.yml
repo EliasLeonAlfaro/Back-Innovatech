@@ -1,6 +1,4 @@
-### Workflow Corregido (`.github/workflows/deploy.yml`)
 
-  ```yaml
 name: Backend Microservices CI/CD (ECR + EKS)
 
 on:
