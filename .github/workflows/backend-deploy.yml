@@ -1,3 +1,6 @@
+### Workflow Corregido (`.github/workflows/deploy.yml`)
+
+  ```yaml
 name: Backend Microservices CI/CD (ECR + EKS)
 
 on:
@@ -7,10 +10,10 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY: backend-innovatech
-  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
   EKS_CLUSTER_NAME: innovatech
   K8S_NAMESPACE: innovatech
+  AWS_ACCOUNT_ID: "308769698189"
+  ECR_REPOSITORY: backend-innovatech
 
 jobs:
   build-and-deploy:
@@ -41,7 +44,7 @@ jobs:
           file: ./back-Despachos_SpringBoot/Dockerfile
           push: true
           tags: |
-            ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}[.amazonaws.com/$](https://.amazonaws.com/$){{ env.ECR_REPOSITORY }}:despachos
+            308769698189.dkr.ecr.us-east-1.amazonaws.com/backend-innovatech:despachos
 
       - name: Build y Push imagen Ventas
         uses: docker/build-push-action@v5
@@ -50,7 +53,7 @@ jobs:
           file: ./back-Ventas_SpringBoot/Dockerfile
           push: true
           tags: |
-            ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}[.amazonaws.com/$](https://.amazonaws.com/$){{ env.ECR_REPOSITORY }}:ventas
+            308769698189.dkr.ecr.us-east-1.amazonaws.com/backend-innovatech:ventas
 
       - name: Instalar kubectl
         uses: azure/setup-kubectl@v4
@@ -91,6 +94,11 @@ jobs:
           kubectl set image deployment/despachos \
             despachos=${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}[.amazonaws.com/$](https://.amazonaws.com/$){{ env.ECR_REPOSITORY }}:despachos \
             -n ${{ env.K8S_NAMESPACE }}
+
+      - name: Reiniciar deployments
+        run: |
+          kubectl rollout restart deployment ventas -n ${{ env.K8S_NAMESPACE }}
+          kubectl rollout restart deployment despachos -n ${{ env.K8S_NAMESPACE }}
 
       - name: Verificar rollout
         run: |
