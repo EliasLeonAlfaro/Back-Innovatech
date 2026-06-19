@@ -1,131 +1,66 @@
-name: Backend Microservices CI/CD (Private Subnet Deploy - Docker Run)
+name: Backend Microservices CI/CD (ECR + EKS)
 
 on:
   push:
     branches:
       - deploy
 
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: backend-innovatech
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+
 jobs:
-  # -------------------------------------------------------------
-  # JOB 1: MICROSERVICIO DESPACHOS
-  # -------------------------------------------------------------
   deploy-despachos:
-    name: Build & Deploy Despachos
+    name: Build & Push Despachos
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/deploy'
     steps:
       - name: Checkout del código
         uses: actions/checkout@v4
 
-      - name: Iniciar sesión en Docker Hub
-        uses: docker/login-action@v3
+      - name: Configurar credenciales AWS
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Construir y Subir Imagen Docker (Despachos)
+      - name: Login Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build y Push imagen Despachos
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./back-Despachos_SpringBoot/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/back_despachos:latest
+          tags: |
+            ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}[.amazonaws.com/$](https://.amazonaws.com/$){{ env.ECR_REPOSITORY }}:despachos
 
-      - name: Despliegue en AWS EC2 Privada vía SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.AWS_EC2_BACKEND_PRIVATE_IP }}
-          username: ec2-user
-          key: ${{ secrets.AWS_PRIVATE_KEY }}
-          proxy_host: ${{ secrets.AWS_EC2_FRONTEND_IP }}
-          proxy_username: ec2-user
-          proxy_key: ${{ secrets.AWS_PRIVATE_KEY }}
-          envs: DOCKERHUB_USERNAME,DOCKERHUB_TOKEN,DB_ENDPOINT,DB_NAME,DB_USERNAME,DB_PASSWORD
-          script: |
-            export DOCKERHUB_USERNAME="${{ secrets.DOCKERHUB_USERNAME }}"
-            export DOCKERHUB_TOKEN="${{ secrets.DOCKERHUB_TOKEN }}"
-            export DB_ENDPOINT="${{ secrets.DB_ENDPOINT }}"
-            export DB_NAME="${{ secrets.DB_NAME }}"
-            export DB_USERNAME="${{ secrets.DB_USERNAME }}"
-            export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
-
-            echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-            
-            docker rm -f $(docker ps -q --filter "publish=8085") 2>/dev/null || true
-            docker stop back_despachos_container || true
-            docker rm back_despachos_container || true
-            
-            docker pull "$DOCKERHUB_USERNAME/back_despachos:latest"
-            
-            # ➡️ CORREGIDO: Se inyectan las propiedades de MySQL directo en el string de conexión JDBC de Spring
-            docker run -d \
-              --name back_despachos_container \
-              -p 8085:8085 \
-              --restart always \
-              -e SERVER_PORT=8085 \
-              -e SPRING_DATASOURCE_URL="jdbc:mysql://$DB_ENDPOINT:3306/$DB_NAME?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC" \
-              -e SPRING_DATASOURCE_USERNAME="$DB_USERNAME" \
-              -e SPRING_DATASOURCE_PASSWORD="$DB_PASSWORD" \
-              "$DOCKERHUB_USERNAME/back_despachos:latest"
-
-  # -------------------------------------------------------------
-  # JOB 2: MICROSERVICIO VENTAS
-  # -------------------------------------------------------------
   deploy-ventas:
-    name: Build & Deploy Ventas
+    name: Build & Push Ventas
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/deploy'
     steps:
       - name: Checkout del código
         uses: actions/checkout@v4
 
-      - name: Iniciar sesión en Docker Hub
-        uses: docker/login-action@v3
+      - name: Configurar credenciales AWS
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Construir y Subir Imagen Docker (Ventas)
+      - name: Login Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build y Push imagen Ventas
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./back-Ventas_SpringBoot/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/back_ventas:latest
-
-      - name: Despliegue en AWS EC2 Privada vía SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.AWS_EC2_BACKEND_PRIVATE_IP }}
-          username: ec2-user
-          key: ${{ secrets.AWS_PRIVATE_KEY }}
-          proxy_host: ${{ secrets.AWS_EC2_FRONTEND_IP }}
-          proxy_username: ec2-user
-          proxy_key: ${{ secrets.AWS_PRIVATE_KEY }}
-          envs: DOCKERHUB_USERNAME,DOCKERHUB_TOKEN,DB_ENDPOINT,DB_NAME,DB_USERNAME,DB_PASSWORD
-          script: |
-            export DOCKERHUB_USERNAME="${{ secrets.DOCKERHUB_USERNAME }}"
-            export DOCKERHUB_TOKEN="${{ secrets.DOCKERHUB_TOKEN }}"
-            export DB_ENDPOINT="${{ secrets.DB_ENDPOINT }}"
-            export DB_NAME="${{ secrets.DB_NAME }}"
-            export DB_USERNAME="${{ secrets.DB_USERNAME }}"
-            export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
-
-            echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-            
-            docker rm -f $(docker ps -q --filter "publish=8086") 2>/dev/null || true
-            docker stop back_ventas_container || true
-            docker rm back_ventas_container || true
-            
-            docker pull "$DOCKERHUB_USERNAME/back_ventas:latest"
-            
-            # ➡️ CORREGIDO: Se inyectan las propiedades de MySQL directo en el string de conexión JDBC de Spring
-            docker run -d \
-              --name back_ventas_container \
-              -p 8086:8086 \
-              --restart always \
-              -e SERVER_PORT=8086 \
-              -e SPRING_DATASOURCE_URL="jdbc:mysql://$DB_ENDPOINT:3306/$DB_NAME?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC" \
-              -e SPRING_DATASOURCE_USERNAME="$DB_USERNAME" \
-              -e SPRING_DATASOURCE_PASSWORD="$DB_PASSWORD" \
-              "$DOCKERHUB_USERNAME/back_ventas:latest"
+          tags: |
+            ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}[.amazonaws.com/$](https://.amazonaws.com/$){{ env.ECR_REPOSITORY }}:ventas
