@@ -9,12 +9,13 @@ env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: backend-innovatech
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  EKS_CLUSTER_NAME: innovatech
+  K8S_NAMESPACE: innovatech
 
 jobs:
-  deploy-despachos:
-    name: Build & Push Despachos
+  build-and-deploy:
+    name: Build, Push & Deploy Backend
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout del código
         uses: actions/checkout@v4
@@ -40,29 +41,7 @@ jobs:
           file: ./back-Despachos_SpringBoot/Dockerfile
           push: true
           tags: |
-            ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:despachos
-
-  deploy-ventas:
-    name: Build & Push Ventas
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout del código
-        uses: actions/checkout@v4
-
-      - name: Configurar credenciales AWS
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Verificar identidad AWS
-        run: aws sts get-caller-identity
-
-      - name: Login Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
+            ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}[.amazonaws.com/$](https://.amazonaws.com/$){{ env.ECR_REPOSITORY }}:despachos
 
       - name: Build y Push imagen Ventas
         uses: docker/build-push-action@v5
@@ -71,4 +50,50 @@ jobs:
           file: ./back-Ventas_SpringBoot/Dockerfile
           push: true
           tags: |
-            ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:ventas
+            ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}[.amazonaws.com/$](https://.amazonaws.com/$){{ env.ECR_REPOSITORY }}:ventas
+
+      - name: Instalar kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Configurar conexión con EKS
+        run: |
+          aws eks update-kubeconfig \
+            --region ${{ env.AWS_REGION }} \
+            --name ${{ env.EKS_CLUSTER_NAME }}
+
+      - name: Crear namespace si no existe
+        run: |
+          kubectl create namespace ${{ env.K8S_NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Crear o actualizar Secret MySQL en Kubernetes
+        run: |
+          kubectl create secret generic mysql-secret \
+            --from-literal=SPRING_DATASOURCE_URL="jdbc:mysql://${{ secrets.DB_ENDPOINT }}:3306/${{ secrets.DB_NAME }}?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC" \
+            --from-literal=SPRING_DATASOURCE_USERNAME="${{ secrets.DB_USERNAME }}" \
+            --from-literal=SPRING_DATASOURCE_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+            -n ${{ env.K8S_NAMESPACE }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Aplicar manifiestos Kubernetes
+        run: |
+          kubectl apply -f k8s/ventas-deployment.yaml
+          kubectl apply -f k8s/despachos-deployment.yaml
+          kubectl apply -f k8s/hpa.yaml
+
+      - name: Actualizar imagen Ventas
+        run: |
+          kubectl set image deployment/ventas \
+            ventas=${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}[.amazonaws.com/$](https://.amazonaws.com/$){{ env.ECR_REPOSITORY }}:ventas \
+            -n ${{ env.K8S_NAMESPACE }}
+
+      - name: Actualizar imagen Despachos
+        run: |
+          kubectl set image deployment/despachos \
+            despachos=${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}[.amazonaws.com/$](https://.amazonaws.com/$){{ env.ECR_REPOSITORY }}:despachos \
+            -n ${{ env.K8S_NAMESPACE }}
+
+      - name: Verificar rollout
+        run: |
+          kubectl rollout status deployment/ventas -n ${{ env.K8S_NAMESPACE }}
+          kubectl rollout status deployment/despachos -n ${{ env.K8S_NAMESPACE }}
+          kubectl get pods -n ${{ env.K8S_NAMESPACE }}
