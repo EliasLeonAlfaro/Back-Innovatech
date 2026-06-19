@@ -9,7 +9,7 @@ spec:
     kind: Deployment
     name: ventas
   minReplicas: 2
-  maxReplicas: 6
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
@@ -17,7 +17,9 @@ spec:
         target:
           type: Utilization
           averageUtilization: 50
+
 ---
+
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -29,27 +31,7 @@ spec:
     kind: Deployment
     name: despachos
   minReplicas: 2
-  maxReplicas: 6
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 50
----
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: frontend-hpa
-  namespace: innovatech
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: frontend
-  minReplicas: 2
-  maxReplicas: 4
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
