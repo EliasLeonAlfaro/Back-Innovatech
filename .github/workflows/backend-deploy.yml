@@ -9,7 +9,7 @@ env:
   AWS_REGION: us-east-1
   EKS_CLUSTER_NAME: innovatech
   K8S_NAMESPACE: innovatech
-  AWS_ACCOUNT_ID: "308769698189"
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
   ECR_REPOSITORY: backend-innovatech
 
 jobs:
