@@ -1,7 +1,7 @@
 FROM maven:3.9.6-eclipse-temurin-17-alpine AS build
 WORKDIR /app
 
-# Buscamos el código bajando un nivel hacia la subcarpeta internaaaa
+# Buscamos el código bajando un nivel hacia la subcarpeta interna
 COPY ./back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO/pom.xml .
 RUN mvn dependency:go-offline -B
 COPY ./back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO/src ./src
