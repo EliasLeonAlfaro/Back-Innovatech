@@ -10,7 +10,8 @@ env:
   EKS_CLUSTER_NAME: examen-eks
   K8S_NAMESPACE: innovatech
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-  ECR_REPOSITORY: backend-innovatech
+  ECR_REPOSITORY: back-innovatech
+
 
 jobs:
   build-and-deploy:
@@ -41,7 +42,7 @@ jobs:
           context: .
           file: ./back-Despachos_SpringBoot/Dockerfile
           push: true
-          tags: 308769698189.dkr.ecr.us-east-1.amazonaws.com/backend-innovatech:despachos
+          tags: 308769698189.dkr.ecr.us-east-1.amazonaws.com/back-innovatech:despachos
 
       - name: Build y Push imagen Ventas
         uses: docker/build-push-action@v5
@@ -49,7 +50,7 @@ jobs:
           context: .
           file: ./back-Ventas_SpringBoot/Dockerfile
           push: true
-          tags: 308769698189.dkr.ecr.us-east-1.amazonaws.com/backend-innovatech:ventas
+          tags: 308769698189.dkr.ecr.us-east-1.amazonaws.com/back-innovatech:ventas
 
       - name: Instalar kubectl
         uses: azure/setup-kubectl@v4
@@ -81,11 +82,11 @@ jobs:
 
       - name: Actualizar imagen Ventas
         run: |
-          kubectl set image deployment/ventas ventas=308769698189.dkr.ecr.us-east-1.amazonaws.com/backend-innovatech:ventas -n innovatech
+          kubectl set image deployment/ventas ventas=308769698189.dkr.ecr.us-east-1.amazonaws.com/back-innovatech:ventas -n innovatech
 
       - name: Actualizar imagen Despachos
         run: |
-          kubectl set image deployment/despachos despachos=308769698189.dkr.ecr.us-east-1.amazonaws.com/backend-innovatech:despachos -n innovatech
+          kubectl set image deployment/despachos despachos=308769698189.dkr.ecr.us-east-1.amazonaws.com/back-innovatech:despachos -n innovatech
 
       - name: Reiniciar deployments
         run: |
