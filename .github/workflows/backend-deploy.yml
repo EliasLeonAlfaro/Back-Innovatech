@@ -7,7 +7,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  EKS_CLUSTER_NAME: innovatech
+  EKS_CLUSTER_NAME: examen-eks
   K8S_NAMESPACE: innovatech
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
   ECR_REPOSITORY: backend-innovatech
@@ -58,7 +58,7 @@ jobs:
         run: |
           aws eks update-kubeconfig \
             --region us-east-1 \
-            --name innovatech
+            --name examen-eks
 
       - name: Crear namespace si no existe
         run: |
