@@ -42,7 +42,7 @@ jobs:
           context: .
           file: ./back-Despachos_SpringBoot/Dockerfile
           push: true
-          tags: 578375889933.dkr.ecr.us-east-1.amazonaws.com/back-innovatech:despachos
+          tags: 341382564064.dkr.ecr.us-east-1.amazonaws.com/back-innovatech:despachos
 
       - name: Build y Push imagen Ventas
         uses: docker/build-push-action@v5
@@ -50,7 +50,7 @@ jobs:
           context: .
           file: ./back-Ventas_SpringBoot/Dockerfile
           push: true
-          tags: 578375889933.dkr.ecr.us-east-1.amazonaws.com/back-innovatech:ventas
+          tags: 341382564064.dkr.ecr.us-east-1.amazonaws.com/back-innovatech:ventas
 
       - name: Instalar kubectl
         uses: azure/setup-kubectl@v4
@@ -82,11 +82,11 @@ jobs:
 
       - name: Actualizar imagen Ventas
         run: |
-          kubectl set image deployment/ventas ventas=578375889933.dkr.ecr.us-east-1.amazonaws.com/back-innovatech:ventas -n innovatech
+          kubectl set image deployment/ventas ventas=341382564064.dkr.ecr.us-east-1.amazonaws.com/back-innovatech:ventas -n innovatech
 
       - name: Actualizar imagen Despachos
         run: |
-          kubectl set image deployment/despachos despachos=578375889933.dkr.ecr.us-east-1.amazonaws.com/back-innovatech:despachos -n innovatech
+          kubectl set image deployment/despachos despachos=341382564064.dkr.ecr.us-east-1.amazonaws.com/back-innovatech:despachos -n innovatech
 
       - name: Reiniciar deployments
         run: |
